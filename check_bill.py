@@ -8,9 +8,11 @@ from decimal import Decimal
 
 # 时间	收支类型	账目分类	金额	账户	账户类型	账本	成员	备注
 # 2019/07/23
+month = 12
 
-start_date = datetime.datetime(2019, 8, 1)
-end_date = datetime.datetime(2019, 9, 8)
+start_date = datetime.datetime(2019, month - 1, 7)
+end_date = datetime.datetime(2019, month, 7)
+
 
 def config_logger():
     log_formatter = '[%(asctime)s] %(levelname)s : %(message)s'
@@ -63,7 +65,7 @@ def remove_tab_from_value(value):
 def init_cmb():
     columns = ['transaction_date', 'bill_date', 'transaction_description', 'transaction_location', 'card_number',
                'str_rmb', 'transction_amount']
-    df = pd.read_csv('userdata.csv', header=0, names=columns, parse_dates=['transaction_date', 'bill_date'],
+    df = pd.read_csv('data/userdata.csv', header=0, names=columns, parse_dates=['transaction_date', 'bill_date'],
                      # dtype={'transction_amount': np.float64}, thousands=',',
                      index_col=None, na_values=['NA'], converters={'transction_amount': decimal_from_value, 'transaction_description': remove_tab_from_value})
     df['type'] = 'cmb'
@@ -83,7 +85,7 @@ def init_cmb_history():
 
     columns = ['transaction_date', 'bill_date', 'transaction_description', 'transaction_location', 'card_number',
                'str_rmb', 'transction_amount']
-    df = pd.read_excel('cmb.xlsx', 'Sheet1', converters={'transction_amount': decimal_from_value, 'transaction_date': conver_date},
+    df = pd.read_excel('data/cmb-{month}.xlsx'.format(month=month), 'Sheet1', converters={'transction_amount': decimal_from_value, 'transaction_date': conver_date},
                        index_col=None, names=columns, na_values=['NA'], parse_dates=['transaction_date'])
     df['type'] = 'cmb'
     df = df[['transaction_date', 'transction_amount',
@@ -99,7 +101,7 @@ def init_cmb_history():
 def init_pocket():
     columns = ['transaction_date', 'transaction_type', 'transaction_classify',
                'transction_amount', 'account', 'account_type', 'account_book', 'member', 'transaction_description']
-    df = pd.read_excel('pocket.xls', '收支记录', converters={'transction_amount': decimal_from_value},
+    df = pd.read_excel('data/pocket.xls', '收支记录', converters={'transction_amount': decimal_from_value},
                        index_col=None, names=columns, na_values=['NA'], parse_dates=['transaction_date'])
     df['type'] = 'pocket'
     df = df[(df.account == '招商银行信用卡')]
@@ -107,7 +109,8 @@ def init_pocket():
              'transaction_description', 'type']]
     df = df.sort_values(by='transaction_date')
     # df = df[df.transaction_date > datetime.datetime(2019, 7, 6)]
-    df = df[(df.transaction_date > start_date) & (df.transaction_date < end_date)]
+    df = df[(df.transaction_date > start_date)
+            & (df.transaction_date < end_date)]
 
     # logger.debug(df)
     return df
@@ -183,6 +186,7 @@ def main():
     print_split('started')
 
     df_cmb = init_cmb_history()
+
     # df_cmb = init_cmb()
     df_pocket = init_pocket()
     logger.debug(df_cmb)
