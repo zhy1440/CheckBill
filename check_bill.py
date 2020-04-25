@@ -4,14 +4,14 @@ import logging
 import numpy as np
 from decimal import Decimal
 # 交易日期	记账日期	交易摘要	人民币金额	交易地金额
-# 2019/7/9
+# 2020/7/9
 
 # 时间	收支类型	账目分类	金额	账户	账户类型	账本	成员	备注
-# 2019/07/23
-month = 12
+# 2020/07/23
+month = 4
 
-start_date = datetime.datetime(2019, month - 1, 7)
-end_date = datetime.datetime(2019, month, 7)
+start_date = datetime.datetime(2020, month - 1, 7)
+end_date = datetime.datetime(2020, month, 7)
 
 
 def config_logger():
@@ -81,7 +81,7 @@ def init_cmb():
 def init_cmb_history():
 
     def conver_date(date):
-        return pd.to_datetime('2019'+date.zfill(4))
+        return pd.to_datetime('2020'+date.zfill(4))
 
     columns = ['transaction_date', 'bill_date', 'transaction_description', 'transaction_location', 'card_number',
                'str_rmb', 'transction_amount']
@@ -108,7 +108,7 @@ def init_pocket():
     df = df[['transaction_date', 'transction_amount',
              'transaction_description', 'type']]
     df = df.sort_values(by='transaction_date')
-    # df = df[df.transaction_date > datetime.datetime(2019, 7, 6)]
+    # df = df[df.transaction_date > datetime.datetime(2020, 7, 6)]
     df = df[(df.transaction_date > start_date)
             & (df.transaction_date < end_date)]
 
@@ -120,25 +120,27 @@ def check_by_pair(df_cmb, df_pocket):
     print_split('check by pair')
     unrecorded_cmb = []
     pair_checked_count = 0
-
+    # unrecorded_pocket = []
     for record in df_cmb.to_records():
         index, transaction_date, value, *(_) = record
         if transaction_date in df_pocket['transaction_date'].values:
-            result = df_pocket[(df_pocket.transction_amount == -value) &
-                               (df_pocket.transaction_date == transaction_date)]
-            if len(result) > 0:
-                if len(result) > 1:
-                    logger.warning('[failed] !!! has same record')
-                    logger.warning(result)
-                    unrecorded_cmb.append(record)
+            logger.debug(record)
+            if value is not None:
+                result = df_pocket[(df_pocket.transction_amount == -value) &
+                                   (df_pocket.transaction_date == transaction_date)]
+                if len(result) > 0:
+                    if len(result) > 1:
+                        logger.warning('[failed] !!! has same record')
+                        logger.warning(result)
+                        unrecorded_cmb.append(record)
+                    else:
+                        logger.info(
+                            '[checked] {cmb} - {pocket}'.format(cmb=record, pocket=result.values))
+                        df_pocket = df_pocket.drop(result.index)
+                        pair_checked_count += 1
                 else:
-                    logger.info(
-                        '[checked] {cmb} - {pocket}'.format(cmb=record, pocket=result.values))
-                    df_pocket = df_pocket.drop(result.index)
-                    pair_checked_count += 1
-            else:
-                unrecorded_cmb.append(record)
-                # logger.debug('===> not found!!!', record)
+                    unrecorded_cmb.append(record)
+                    # logger.debug('===> not found!!!', record)
         else:
             unrecorded_cmb.append(record)
             # logger.debug('===>', transaction_date, 'not found!!!', record)
