@@ -19,6 +19,8 @@ pd.set_option('display.float_format', lambda x: '%.2f' % x)
 
 def init_cmb():
     # 交易日期	记账日期	交易摘要	人民币金额	交易地金额
+    def remove_tab_from_value(value):
+        return value.replace('\t', '')
 
     columns = ['transaction_date', 'bill_date', 'transaction_description', 'transaction_location', 'card_number',
                'str_rmb', 'transction_amount']
@@ -35,8 +37,6 @@ def init_cmb():
 
 def init_pocket():
     # 时间	收支类型	账目分类	金额	账户	账户类型	账本	成员	备注
-    def remove_tab_from_value(value):
-        return value.replace('\t', '')
 
     columns = ['transaction_date', 'transaction_type', 'transaction_classify',
                'transction_amount', 'account', 'account_type', 'account_book', 'member', 'transaction_description']
@@ -128,7 +128,6 @@ def main():
     logger.print_split('started')
 
     # df_cmb = init_cmb()
-    # df_cmb = init_cmb_history()
     months = range(START_MONTH, END_MONTH+1)
 
     df_cmb = init_cmb_from_pdf_multiple(months)

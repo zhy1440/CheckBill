@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import pdfreader
 from pdfreader import PDFDocument, SimplePDFViewer
 # from common import config_logger
 from common import decimal_from_value
